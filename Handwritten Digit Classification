@@ -1,0 +1,36 @@
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, MaxPooling2D
+from tensorflow.keras.callbacks import EarlyStopping
+
+# Load the MNIST dataset
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+# Preprocess the data
+X_train = X_train.reshape(X_train.shape[0], 28, 28, 1).astype('float32') / 255
+X_test = X_test.reshape(X_test.shape[0], 28, 28, 1).astype('float32') / 255
+
+# One-hot encode the labels
+y_train = pd.get_dummies(y_train).values
+y_test = pd.get_dummies(y_test).values
+
+# Define the CNN model
+model = Sequential()
+model.add(Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=(28, 28, 1)))
+model.add(MaxPooling2D((2, 2)))
+model.add(Flatten())
+model.add(Dense(128, activation='relu', kernel_initializer='he_uniform'))
+model.add(Dense(10, activation='softmax'))
+
+# Compile the model
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Early stopping to prevent overfitting
+early_stopping = EarlyStopping(monitor='val_loss', patience=3)
+
+# Train the model
+model.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test), callbacks=[early_stopping])
+
+# Evaluate the model
+loss, accuracy = model.evaluate(X_test, y_test)
+print(f'Test accuracy: {accuracy:.2f}')
